@@ -4,7 +4,7 @@ Este proyecto está diseñado para manejar la creación de enlaces simbólicos e
 
 ## Estructura del proyecto
 
-- **beatconnect_app/**: Proyecto principal de Flutter.
+- **project/**: Proyecto principal de Flutter.
 - **symlinks/**: Carpeta temporal donde se copiarán los archivos en lugar de crear enlaces simbólicos (symlinks).
 - **scripts/**: Scripts que manejan los symlinks.
 - **.gitignore**: Archivos o carpetas que no deben ser versionados.
