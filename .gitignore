@@ -14,8 +14,8 @@ windows/
 macos/
 linux/
 
-# Carpeta de symlinks gestionada manualmente (no es necesario versionar su contenido)
-symlinks/
+# # Carpeta de symlinks gestionada manualmente (no es necesario versionar su contenido)
+# symlinks/
 
 # Ignorar archivos innecesarios en project/
 project/.dart_tool/
