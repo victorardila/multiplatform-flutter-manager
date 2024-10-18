@@ -1,0 +1,25 @@
+# Flutter generated files and folders
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.project
+.idea/
+*.iml
+
+# Ignorar carpetas específicas de plataformas
+android/
+ios/
+windows/
+macos/
+linux/
+
+# Carpeta de symlinks gestionada manualmente (no es necesario versionar su contenido)
+symlinks/
+
+# Ignorar archivos innecesarios en project/
+project/.dart_tool/
+project/build/
+project/.idea/
+project/.packages
+project/.flutter-plugins*
