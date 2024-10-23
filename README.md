@@ -1,4 +1,4 @@
-# Flutter Symlink Manager
+# Multiplatform Flutter Manager
 
 Este proyecto está diseñado para manejar la creación de enlaces simbólicos en sistemas de archivos que no soportan symlinks, como exFAT. La estructura permite trabajar con proyectos Flutter en una partición exFAT compartida entre Linux, Windows y macOS sin problemas con los symlinks.
 
