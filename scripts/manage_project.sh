@@ -1,8 +1,14 @@
 #!/bin/bash
 
+# Definir colores brillantes y negrita
+RED_BOLD='\033[1;91m'      # Rojo brillante y negrita
+GREEN_BOLD='\033[1;92m'    # Verde brillante y negrita
+YELLOW_BOLD='\033[1;93m'   # Amarillo brillante y negrita
+BLUE_BOLD='\033[1;94m'     # Azul brillante y negrita
+NC='\033[0m'               # Sin color (reset)
+
 # Definir variables del proyecto
 PROJECT_DIR=$(pwd)
-# Ajustar PROJECTS_DIR para que esté en el nivel correcto
 PROJECTS_DIR="$(dirname "$PROJECT_DIR")/project"
 
 # Obtener las particiones del disco
@@ -17,51 +23,104 @@ for PARTITION in $PARTITIONS; do
     fi
 done
 
-# Función para ejecutar el proyecto en cada subcarpeta
-run_projects() {
-    # Recorrer todas las carpetas dentro de project
-    for project in "$PROJECTS_DIR"/*; do
-        if [ -d "$project" ]; then
-            cd "$project" || continue  # Cambiar al directorio del proyecto
-            
-            # Aquí puedes ejecutar tu comando de Flutter, como:
-            flutter run
-            
-            # Volver al directorio anterior
-            cd - || exit
-        fi
+# Función para mostrar puntos de carga con el mismo color que el texto
+mostrar_puntos() {
+    local color="$1"
+    for i in {1..3}; do
+        echo -n -e "${color}."  # Evita el salto de línea y usa el color proporcionado
+        sleep 0.5  # Pausa de 0.5 segundos entre cada punto
     done
+    echo -e "${NC}"  # Salto de línea al final de los puntos y reseteo de color
+}
+
+# Función para verificar si un paquete está instalado
+check_installation() {
+    package=$1
+    if ! command -v "$package" &> /dev/null; then
+        echo "$package no está instalado."
+        return 1
+    else
+        echo "$package ya está instalado."
+        return 0
+    fi
+}
+
+# Función para instalar NTFS-3G, macFUSE y Mounty en macOS
+install_ntfs3g_macfuse_mounty() {
+    # URL SERVICE: https://mounty.app/#installation
+    if ! command -v brew &> /dev/null; then
+        echo -e "${RED_BOLD}Homebrew no está instalado. Instalando Homebrew...${NC}"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+
+    if ! brew list --cask macfuse &> /dev/null; then
+        echo -e "${YELLOW_BOLD}\nInstalando macFUSE...${NC}"
+        brew install --cask macfuse
+        echo "Sigue las instrucciones de instalación de macFUSE."
+    else
+        echo "macFUSE ya está instalado."
+    fi
+
+    if ! brew list ntfs-3g-mac &> /dev/null; then
+        echo -e "${YELLOW_BOLD}\nInstalando NTFS-3G para macOS...${NC}"
+        brew install gromgit/fuse/ntfs-3g-mac
+    else
+        echo "NTFS-3G ya está instalado."
+    fi
+
+    if ! brew list --cask mounty &> /dev/null; then
+        echo -e "${YELLOW_BOLD}\nInstalando Mounty...${NC}"
+        brew install --cask mounty
+    else
+        echo "Mounty ya está instalado."
+    fi
+}
+
+# Función para montar las particiones NTFS con Mounty
+montar_con_mounty() {
+    echo -e "${GREEN_BOLD}\nEjecutando Mounty para montar particiones NTFS...${NC}"
+    open -a "Mounty"
+    sleep 5
+    MOUNTED=$(mount | grep "$PARTITION_FOUND" | grep "ntfs")
+    if [[ -n "$MOUNTED" ]]; then
+        echo -e "${GREEN_BOLD}\nLa partición NTFS está montada correctamente.${NC}"
+    else
+        echo -e "${RED_BOLD}\nNo se pudo montar la partición NTFS con Mounty.${NC}"
+        exit 1
+    fi
 }
 
 # Función para detectar el sistema operativo
 detectar_sistema_operativo() {
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        echo "Running Linux🐧..."
-        run_projects
+        echo -n -e "\n${GREEN_BOLD}Running Linux🐧${NC}"  # Usa -n para no hacer salto de línea
+        mostrar_puntos "$GREEN_BOLD"  # Mostrar puntos justo después de la línea con el color verde
+        echo -e "${NC}"
+        # Llama al nuevo script para ejecutar los proyectos, pasando el sistema operativo
+        bash ./flutter_manager.sh "linux"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        echo "Running macOS🍏..."
-        run_projects
+        echo -n -e "\n${BLUE_BOLD}Running macOS🍏${NC}"  # Usa -n para no hacer salto de línea
+        mostrar_puntos "$BLUE_BOLD"  # Mostrar puntos justo después de la línea con el color azul
+        echo -e "${NC}"
+        bash ./flutter_manager.sh "macos"
     elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-        echo "Running Windows🪟..."
-        run_projects
+        echo -n -e "\n${YELLOW_BOLD}Running Windows🪟${NC}"  # Usa -n para no hacer salto de línea
+        mostrar_puntos "$YELLOW_BOLD"  # Mostrar puntos justo después de la línea con el color amarillo
+        echo -e "${NC}"
+        bash ./flutter_manager.sh "windows"
     else
-        echo "Sistema operativo no detectado o no compatible."
+        echo -e "${RED_BOLD}\nSistema operativo no detectado o no compatible.${NC}"
     fi
 }
 
 # Verificar si se encontró la partición
 if [ -n "$PARTITION_FOUND" ]; then
-    # Obtener el tipo de sistema de archivos de la partición
     FILESYSTEM_TYPE=$(lsblk -f | grep "$PARTITION_FOUND" | awk '{print $2}')
-
-    # Comprobar si el sistema de archivos es NTFS
     if [[ "$FILESYSTEM_TYPE" == "ntfs" ]]; then
         detectar_sistema_operativo
     else
-        echo "ADVERTENCIA: La partición actual no es NTFS."
-        echo "Para que el gestor de script funcione correctamente, debe asegurarse de que la partición en la que se ejecuta el script sea NTFS; si no, no va a funcionar."
+        echo -e "${RED_BOLD}\nADVERTENCIA: La partición actual no es NTFS.${NC}"
     fi
-
 else
-    echo "No se encontró ninguna partición que coincida con la ruta del proyecto."
+    echo -e "${RED_BOLD}\nNo se encontró ninguna partición que coincida con la ruta del proyecto.${NC}"
 fi
