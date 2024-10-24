@@ -6,6 +6,7 @@ Este proyecto está diseñado para manejar la creación de enlaces simbólicos e
 
 ## Estructura del proyecto
 
+```plaintext
 📁 multiplatform-flutter-manager/
 │
 ├── 📁 assets/                       # Recursos del proyecto
@@ -19,6 +20,7 @@ Este proyecto está diseñado para manejar la creación de enlaces simbólicos e
 │
 ├── README.md                        # Este archivo que estás leyendo
 └── LICENSE                          # Archivo de licencia del proyecto (si aplicable)
+```
 
 ## `Conveciones`
 
