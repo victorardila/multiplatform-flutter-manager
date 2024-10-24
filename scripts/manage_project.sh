@@ -8,10 +8,12 @@ BLUE_BOLD='\033[1;94m'     # Azul brillante y negrita
 NC='\033[0m'               # Sin color (reset)
 
 # Definir variables del proyecto
+USER_NAME=$(whoami)
 PROJECT_DIR=$(pwd)
+MOUNT_POINT="/media/$USER_NAME"
+PARTITION=$(df "$PROJECT_DIR" | awk 'NR==2 {print $1}')
+PARTITION_LABEL=$(lsblk -o LABEL -n "$PARTITION")
 PROJECTS_DIR="$(dirname "$PROJECT_DIR")/project"
-
-# Obtener las particiones del disco
 PARTITIONS=$(lsblk -o MOUNTPOINT | grep "^/")
 
 # Comprobar si alguna partición está en la ruta del proyecto
@@ -22,6 +24,30 @@ for PARTITION in $PARTITIONS; do
         break
     fi
 done
+
+verificar_ruta_particion(){
+    # Comprobar si el directorio de montaje existe, si no, crearlo
+    if [ ! -d "$MOUNT_POINT" ]; then
+        mkdir -p "$MOUNT_POINT"
+    fi
+}
+
+# Función para montar las particiones NTFS en Linux
+montar_ntfs_linux() {
+    # Montar la partición si no está montada
+    if ! mount | grep "$MOUNT_POINT/$PARTITION_LABEL" &> /dev/null; then
+        # Montar la partición
+        sudo mount -o uid=$(id -u),gid=$(id -g),umask=000 "$PARTITION" "$MOUNT_POINT/$PARTITION_LABEL"
+        # Verificar si se montó correctamente
+        if mount | grep "$MOUNT_POINT/$PARTITION_LABEL" &> /dev/null; then
+            echo -e "${GREEN_BOLD}\nLa partición NTFS se montó correctamente en $MOUNT_POINT/$PARTITION_LABEL.${NC}"
+        else
+            echo -e "${RED_BOLD}\nNo se pudo montar la partición NTFS.${NC}"
+            exit 1
+        fi
+    fi
+}
+
 
 # Función para mostrar puntos de carga con el mismo color que el texto
 mostrar_puntos() {
@@ -96,12 +122,14 @@ detectar_sistema_operativo() {
         echo -n -e "\n${GREEN_BOLD}Running On Linux🐧${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$GREEN_BOLD"  # Mostrar puntos justo después de la línea con el color verde
         echo -e "${NC}"
+        montar_ntfs_linux  # Llama a la función de montaje en Linux
         # Llama al nuevo script para ejecutar los proyectos, pasando el sistema operativo
         bash ./flutter_manager.sh "linux"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         echo -n -e "\n${BLUE_BOLD}Running On macOS🍏${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$BLUE_BOLD"  # Mostrar puntos justo después de la línea con el color azul
         echo -e "${NC}"
+        montar_con_mounty  # Montar usando Mounty
         bash ./flutter_manager.sh "macos"
     elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
         echo -n -e "\n${YELLOW_BOLD}Running On Windows🪟${NC}"  # Usa -n para no hacer salto de línea
@@ -112,6 +140,8 @@ detectar_sistema_operativo() {
         echo -e "${RED_BOLD}\nSistema operativo no detectado o no compatible.${NC}"
     fi
 }
+
+verificar_ruta_particion
 
 # Verificar si se encontró la partición
 if [ -n "$PARTITION_FOUND" ]; then
