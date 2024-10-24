@@ -93,18 +93,18 @@ montar_con_mounty() {
 # Función para detectar el sistema operativo
 detectar_sistema_operativo() {
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        echo -n -e "\n${GREEN_BOLD}Running Linux🐧${NC}"  # Usa -n para no hacer salto de línea
+        echo -n -e "\n${GREEN_BOLD}Running On Linux🐧${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$GREEN_BOLD"  # Mostrar puntos justo después de la línea con el color verde
         echo -e "${NC}"
         # Llama al nuevo script para ejecutar los proyectos, pasando el sistema operativo
         bash ./flutter_manager.sh "linux"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        echo -n -e "\n${BLUE_BOLD}Running macOS🍏${NC}"  # Usa -n para no hacer salto de línea
+        echo -n -e "\n${BLUE_BOLD}Running On macOS🍏${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$BLUE_BOLD"  # Mostrar puntos justo después de la línea con el color azul
         echo -e "${NC}"
         bash ./flutter_manager.sh "macos"
     elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
-        echo -n -e "\n${YELLOW_BOLD}Running Windows🪟${NC}"  # Usa -n para no hacer salto de línea
+        echo -n -e "\n${YELLOW_BOLD}Running On Windows🪟${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$YELLOW_BOLD"  # Mostrar puntos justo después de la línea con el color amarillo
         echo -e "${NC}"
         bash ./flutter_manager.sh "windows"

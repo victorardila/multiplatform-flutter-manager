@@ -61,11 +61,18 @@ clean_symlink() {
     fi
 }
 
-# Función para ejecutar el proyecto
 run_projects() {
+    # Función para ejecutar el proyecto
     cd "$PROJECT_DIR/$PROJECT_NAME" || exit
     clean_symlink
+
+    # Limpiar, obtener dependencias
+    flutter clean > /dev/null 2>&1
+    flutter pub get > /dev/null 2>&1
+
+    # Ejecutar el proyecto
     flutter run
+    # No es necesario limpiar después, ya que la ejecución debería ser independiente.
 }
 
 # Llamar a la función para ejecutar el proyecto
