@@ -81,5 +81,6 @@ Para ejecutar el script de manejo del proyecto, sigue estos pasos:
 ### Comando para ejecutar en `bash`
 
 ```bash
+cd scripts # Ejecuta este comando estando dentro de la raiz del proyecto
 ./manage_project.sh
 ```
