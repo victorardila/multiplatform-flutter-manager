@@ -72,6 +72,7 @@ run_projects() {
 
     # Ejecutar el proyecto
     flutter run
+    flutter clean > /dev/null 2>&1
     # No es necesario limpiar después, ya que la ejecución debería ser independiente.
 }
 
