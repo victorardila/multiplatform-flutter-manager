@@ -80,6 +80,14 @@ Para ejecutar el script de manejo del proyecto, sigue estos pasos:
 
 ### Comando para ejecutar en `bash`
 
+1. Primero debes darle permisos de ejecucion al script como superusuario
+
+```bash
+chmod +x manage_project.sh
+```
+
+### Ejecuta el script con permisos de superusuario
+
 ```bash
 cd scripts # Ejecuta este comando estando dentro de la raiz del proyecto
 ./manage_project.sh

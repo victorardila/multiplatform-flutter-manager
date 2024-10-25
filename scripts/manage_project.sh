@@ -1,4 +1,5 @@
 #!/bin/bash
+# set -x
 
 # Definir colores brillantes y negrita
 RED_BOLD='\033[1;91m'      # Rojo brillante y negrita
@@ -7,47 +8,85 @@ YELLOW_BOLD='\033[1;93m'   # Amarillo brillante y negrita
 BLUE_BOLD='\033[1;94m'     # Azul brillante y negrita
 NC='\033[0m'               # Sin color (reset)
 
+if [ "$EUID" -ne 0 ]; then
+    SUPERUSER_PREFIX="sudo"
+else
+    SUPERUSER_PREFIX=""
+fi
+
 # Definir variables del proyecto
-USER_NAME=$(whoami)
+COMMAND_ADMIN=$(
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        $SUPERUSER_PREFIX chmod +x manage_project.sh
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        $SUPERUSER_PREFIX chmod +x manage_project.sh
+    else
+        echo "Sistema operativo no compatible para obtener el LABEL."
+        exit 1
+    fi
+)
+
+USER_NAME=$(
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        whoami
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        $HOME
+    else
+        echo "No se puede obtener el Username"
+        exit 1
+    fi
+)
 PROJECT_DIR=$(pwd)
-MOUNT_POINT="/media/$USER_NAME"
+MOUNT_POINT="default"
 PARTITION=$(df "$PROJECT_DIR" | awk 'NR==2 {print $1}')
-PARTITION_LABEL=$(lsblk -o LABEL -n "$PARTITION")
+PARTITION_LABEL=$(
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        lsblk -o LABEL -n "$PARTITION"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        diskutil info "$PARTITION" | awk -F': ' '/Volume Name/{print $2}'
+    else
+        echo "Sistema operativo no compatible para obtener el LABEL."
+        exit 1
+    fi
+)
 PROJECTS_DIR="$(dirname "$PROJECT_DIR")/project"
-PARTITIONS=$(lsblk -o MOUNTPOINT | grep "^/")
+PARTITIONS=$(
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then 
+        lsblk -o MOUNTPOINT | grep "^/"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        diskutil info -all | grep "Mount Point:" | awk '{print $3}'
+    elif [[ "$OSTYPE" == "msys"* || "$OSTYPE" == "cygwin"* ]]; then
+        wmic logicaldisk get name | grep ":"
+    else
+        echo "No hay particiones en el disco"
+        exit
+    fi
+)
 
 # Comprobar si alguna partición está en la ruta del proyecto
 PARTITION_FOUND=""
 for PARTITION in $PARTITIONS; do
-    if [[ "$PROJECT_DIR" == "$PARTITION"* ]]; then
+    if [[ "$PARTITION" != "/" && "$PROJECT_DIR" == "$PARTITION"* ]]; then
         PARTITION_FOUND="$PARTITION"
         break
     fi
 done
 
 verificar_ruta_particion(){
-    # Comprobar si el directorio de montaje existe, si no, crearlo
-    if [ ! -d "$MOUNT_POINT" ]; then
-        mkdir -p "$MOUNT_POINT"
-    fi
-}
-
-# Función para montar las particiones NTFS en Linux
-montar_ntfs_linux() {
-    # Montar la partición si no está montada
-    if ! mount | grep "$MOUNT_POINT/$PARTITION_LABEL" &> /dev/null; then
-        # Montar la partición
-        sudo mount -o uid=$(id -u),gid=$(id -g),umask=000 "$PARTITION" "$MOUNT_POINT/$PARTITION_LABEL"
-        # Verificar si se montó correctamente
-        if mount | grep "$MOUNT_POINT/$PARTITION_LABEL" &> /dev/null; then
-            echo -e "${GREEN_BOLD}\nLa partición NTFS se montó correctamente en $MOUNT_POINT/$PARTITION_LABEL.${NC}"
-        else
-            echo -e "${RED_BOLD}\nNo se pudo montar la partición NTFS.${NC}"
-            exit 1
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then 
+        MOUNT_POINT="/media/$USER_NAME"
+        # Comprobar si el directorio de montaje existe, si no, crearlo
+        if [ ! -d "$MOUNT_POINT" ]; then
+            mkdir -p "$MOUNT_POINT"
+        fi
+    elif [[ "$OSTYPE" == "darwin"* ]]; then 
+        MOUNT_POINT="/Volumes/$USER_NAME"
+        # Comprobar si el directorio de montaje existe, si no, crearlo
+        if [ ! -d "$MOUNT_POINT" ]; then
+            mkdir -p "$MOUNT_POINT"
         fi
     fi
 }
-
 
 # Función para mostrar puntos de carga con el mismo color que el texto
 mostrar_puntos() {
@@ -79,6 +118,7 @@ install_ntfs3g_macfuse_mounty() {
         /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     fi
 
+    # Verificar si macFUSE está instalado
     if ! brew list --cask macfuse &> /dev/null; then
         echo -e "${YELLOW_BOLD}\nInstalando macFUSE...${NC}"
         brew install --cask macfuse
@@ -87,18 +127,37 @@ install_ntfs3g_macfuse_mounty() {
         echo "macFUSE ya está instalado."
     fi
 
-    if ! brew list ntfs-3g-mac &> /dev/null; then
+    # Verificar si NTFS-3G está instalado
+    if ! brew list gromgit/fuse/ntfs-3g-mac &> /dev/null; then
         echo -e "${YELLOW_BOLD}\nInstalando NTFS-3G para macOS...${NC}"
         brew install gromgit/fuse/ntfs-3g-mac
     else
         echo "NTFS-3G ya está instalado."
     fi
 
-    if ! brew list --cask mounty &> /dev/null; then
+    # Verificar si Mounty está instalado
+    if [ ! -d "/Applications/Mounty.app" ]; then
         echo -e "${YELLOW_BOLD}\nInstalando Mounty...${NC}"
         brew install --cask mounty
     else
         echo "Mounty ya está instalado."
+    fi
+}
+
+# Función para montar las particiones NTFS con ntfs-3g
+montar_con_ntfs_3g() {
+    echo -e "${GREEN_BOLD}\nEjecutando ntfs-3g para montar particiones NTFS...${NC}"
+    echo $MOUNT_POINT
+    # Intenta montar la partición NTFS con ntfs-3g
+    sudo ntfs-3g "$PARTITION" "$MOUNT_POINT"
+    
+    # Verifica si el montaje fue exitoso
+    MOUNTED=$(mount | grep "$PARTITION" | grep "ntfs")
+    if [[ -n "$MOUNTED" ]]; then
+        echo -e "${GREEN_BOLD}\nLa partición NTFS está montada correctamente.${NC}"
+    else
+        echo -e "${RED_BOLD}\nNo se pudo montar la partición NTFS con ntfs-3g.${NC}"
+        exit 1
     fi
 }
 
@@ -129,7 +188,8 @@ detectar_sistema_operativo() {
         echo -n -e "\n${BLUE_BOLD}Running On macOS🍏${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$BLUE_BOLD"  # Mostrar puntos justo después de la línea con el color azul
         echo -e "${NC}"
-        montar_con_mounty  # Montar usando Mounty
+        install_ntfs3g_macfuse_mounty
+        montar_con_ntfs_3g  # Montar usando Mounty
         bash ./flutter_manager.sh "macos"
     elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
         echo -n -e "\n${YELLOW_BOLD}Running On Windows🪟${NC}"  # Usa -n para no hacer salto de línea
@@ -145,8 +205,20 @@ verificar_ruta_particion
 
 # Verificar si se encontró la partición
 if [ -n "$PARTITION_FOUND" ]; then
-    FILESYSTEM_TYPE=$(lsblk -f | grep "$PARTITION_FOUND" | awk '{print $2}')
-    if [[ "$FILESYSTEM_TYPE" == "ntfs" ]]; then
+    FILESYSTEM_TYPE=$(
+        if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+            lsblk -f | grep "$PARTITION_FOUND" | awk '{print $2}'
+        elif [[ "$OSTYPE" == "darwin"* ]]; then
+            diskutil info "$PARTITION_FOUND" | grep "File System Personality" | awk -F': ' '{print $2}' | xargs 
+        elif [[ "$OSTYPE" == "cwinyg"* || "$OSTYPE" == "msys"* || "$OSTYPE" == "win32"* ]]; then
+            wmic logicaldisk where "deviceid='$PARTITION_FOUND'" get filesystem | findstr /i /v "Filesystem"
+        else
+            echo "Sistema operativo no compatible para obtener el LABEL."
+            exit 1
+        fi
+    )
+
+    if [[ "$FILESYSTEM_TYPE" == "ntfs" || "$FILESYSTEM_TYPE" == "NTFS" ]]; then
         detectar_sistema_operativo
     else
         echo -e "${RED_BOLD}\nADVERTENCIA: La partición actual no es NTFS.${NC}"
