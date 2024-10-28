@@ -23,7 +23,8 @@ obtener_fecha_hora() {
 NOMBRE_ARCHIVO="$(obtener_fecha_hora).md"
 
 # Obtener versiones de Flutter, Java y Gradle
-FLUTTER_VERSION=$(flutter --version | awk '{print $2}')  # Captura la versión de Flutter
+# Asegúrate de que solo obtienes la versión sin líneas adicionales
+FLUTTER_VERSION=$(flutter --version | head -n 1 | awk '{print $2}')
 JAVA_VERSION=$(java -version 2>&1 | awk -F '"' '/version/ {print $2}')  # Captura la versión de Java
 
 # Función para instalar Gradle
@@ -62,7 +63,7 @@ cd - > /dev/null  # Volver al directorio original
 CONTENIDO="# Documentación del Proyecto\n\n"
 CONTENIDO+="## Fecha de Creación\n\n"
 CONTENIDO+="$(obtener_fecha_hora)\n\n"
-CONTENIDO+="## Versiones de Dependencias\n"
+CONTENIDO+="## Versiones de Dependencias\n\n"
 CONTENIDO+="**Flutter SDK:** $FLUTTER_VERSION\n"
 CONTENIDO+="**Java:** $JAVA_VERSION\n"
 CONTENIDO+="**Gradle:** $GRADLE_VERSION\n\n"
@@ -76,12 +77,15 @@ CONTENIDO+="## Instalación\n\n"
 CONTENIDO+="Para instalar este proyecto, sigue estos pasos:\n\n"
 CONTENIDO+="1. Clona el repositorio\n"
 CONTENIDO+="2. Navega a la carpeta del proyecto\n"
-CONTENIDO+="3. Ejecuta \flutter pub get\\n\n"
+CONTENIDO+="3. Ejecuta:\n\n"
+CONTENIDO+="\`\`\`bash\n"
+CONTENIDO+="flutter pub get\n"
+CONTENIDO+="\`\`\`\n\n"
 CONTENIDO+="## Uso\n\n"
 CONTENIDO+="Para ejecutar la aplicación, utiliza el siguiente comando:\n\n"
 CONTENIDO+="\`\`\`bash\n"
 CONTENIDO+="flutter run\n"
-CONTENIDO+="\`\`\`\n\n"
+CONTENIDO+="\`\`\`"
 
 # Crear el archivo en la carpeta de documentación y escribir el contenido en él
 echo -e "$CONTENIDO" > "$DOCS_DIR/$NOMBRE_ARCHIVO"
