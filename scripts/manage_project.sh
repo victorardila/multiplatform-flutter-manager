@@ -177,17 +177,26 @@ montar_con_mounty() {
 
 # Pregunta al usuario si quiere generar un archivo de documentación
 generar_doc(){
-    echo -e "\n¿Quieres generar un archivo de documentación? (s/n)"
-    read -r respuesta
+    echo -e "\n¿Quieres generar un archivo de documentación? (Si)[S/s] o (No)[N/n]"
+    
+    # Lee un solo carácter sin esperar Enter
+    read -r -n 1 respuesta
+    tput cuu1      # Mueve el cursor una línea hacia arriba
+    tput el        # Borra el contenido de la línea
+    # Imprime una nueva línea después de capturar el carácter
+    echo
 
     if [[ "$respuesta" == "s" || "$respuesta" == "S" ]]; then
+        tput cuu1      # Mueve el cursor una línea hacia arriba
+        tput el        # Borra el contenido de la línea
         # Lógica para generar el archivo de documentación
         echo "Generando archivo de documentación..."
         bash ./docs_manager.sh
     else
-        echo "No se generará ningún archivo de documentación."
+        echo "No se generará el archivo de documentación."
     fi
 }
+
 # Función para detectar el sistema operativo
 detectar_sistema_operativo() {
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
