@@ -18,6 +18,7 @@ linux/
 # symlinks/
 
 # Ignorar archivos innecesarios en project/
+docs/*
 project/*
 project/.dart_tool/
 project/build/

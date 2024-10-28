@@ -175,19 +175,33 @@ montar_con_mounty() {
     fi
 }
 
+# Pregunta al usuario si quiere generar un archivo de documentación
+generar_doc(){
+    echo -e "\n¿Quieres generar un archivo de documentación? (s/n)"
+    read -r respuesta
+
+    if [[ "$respuesta" == "s" || "$respuesta" == "S" ]]; then
+        # Lógica para generar el archivo de documentación
+        echo "Generando archivo de documentación..."
+        bash ./docs_manager.sh
+    else
+        echo "No se generará ningún archivo de documentación."
+    fi
+}
 # Función para detectar el sistema operativo
 detectar_sistema_operativo() {
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         echo -n -e "\n${GREEN_BOLD}Running On Linux🐧${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$GREEN_BOLD"  # Mostrar puntos justo después de la línea con el color verde
         echo -e "${NC}"
-        montar_ntfs_linux  # Llama a la función de montaje en Linux
+        generar_doc
         # Llama al nuevo script para ejecutar los proyectos, pasando el sistema operativo
         bash ./flutter_manager.sh "linux"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         echo -n -e "\n${BLUE_BOLD}Running On macOS🍏${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$BLUE_BOLD"  # Mostrar puntos justo después de la línea con el color azul
         echo -e "${NC}"
+        generar_doc
         install_ntfs3g_macfuse_mounty
         montar_con_ntfs_3g  # Montar usando Mounty
         bash ./flutter_manager.sh "macos"
@@ -195,6 +209,7 @@ detectar_sistema_operativo() {
         echo -n -e "\n${YELLOW_BOLD}Running On Windows🪟${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$YELLOW_BOLD"  # Mostrar puntos justo después de la línea con el color amarillo
         echo -e "${NC}"
+        generar_doc
         bash ./flutter_manager.sh "windows"
     else
         echo -e "${RED_BOLD}\nSistema operativo no detectado o no compatible.${NC}"
