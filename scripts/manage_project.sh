@@ -177,7 +177,7 @@ montar_con_mounty() {
 
 # Pregunta al usuario si quiere generar un archivo de documentación
 generar_doc(){
-    echo -e "\n¿Quieres generar un archivo de documentación? (Si)[S/s] o (No)[N/n]"
+    echo -e "\n ¿Quieres generar un archivo de documentación? (Si)[S/s] o (No)[N/n]"
     
     # Lee un solo carácter sin esperar Enter
     read -r -n 1 respuesta
@@ -187,8 +187,6 @@ generar_doc(){
     echo
 
     if [[ "$respuesta" == "s" || "$respuesta" == "S" ]]; then
-        tput cuu1      # Mueve el cursor una línea hacia arriba
-        tput el        # Borra el contenido de la línea
         # Lógica para generar el archivo de documentación
         echo "Generando archivo de documentación..."
         bash ./docs_manager.sh
@@ -202,14 +200,20 @@ detectar_sistema_operativo() {
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         echo -n -e "\n${GREEN_BOLD}Running On Linux🐧${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$GREEN_BOLD"  # Mostrar puntos justo después de la línea con el color verde
-        echo -e "${NC}"
+        # Obtener el dispositivo actual
+        DEVICE=$(flutter devices --machine | jq -r '.[0].name')
+        echo -e "\n${GREEN_BOLD}Dispositivo al que compilara:${NC}"
+        echo "  - $DEVICE"
         generar_doc
         # Llama al nuevo script para ejecutar los proyectos, pasando el sistema operativo
         bash ./flutter_manager.sh "linux"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
         echo -n -e "\n${BLUE_BOLD}Running On macOS🍏${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$BLUE_BOLD"  # Mostrar puntos justo después de la línea con el color azul
-        echo -e "${NC}"
+        # Obtener el dispositivo actual
+        DEVICE=$(flutter devices --machine | jq -r '.[0].name')
+        echo -e "\n${GREEN_BOLD}Dispositivo al que compilara:${NC}"
+        echo "  - $DEVICE"
         generar_doc
         install_ntfs3g_macfuse_mounty
         montar_con_ntfs_3g  # Montar usando Mounty
@@ -217,7 +221,10 @@ detectar_sistema_operativo() {
     elif [[ "$OSTYPE" == "cygwin" || "$OSTYPE" == "msys" || "$OSTYPE" == "win32" ]]; then
         echo -n -e "\n${YELLOW_BOLD}Running On Windows🪟${NC}"  # Usa -n para no hacer salto de línea
         mostrar_puntos "$YELLOW_BOLD"  # Mostrar puntos justo después de la línea con el color amarillo
-        echo -e "${NC}"
+        # Obtener el dispositivo actual
+        DEVICE=$(flutter devices --machine | jq -r '.[0].name')
+        echo -e "\n${GREEN_BOLD}Dispositivo al que compilara:${NC}"
+        echo "  - $DEVICE"
         generar_doc
         bash ./flutter_manager.sh "windows"
     else
