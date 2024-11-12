@@ -193,7 +193,7 @@ preguntar_versionamiento_git() {
         bash ./git_flow.sh
         # Lugo selecciono la terminal donde estoy ejecutando este script para seguir con el flujo aqui
     elif [[ "$respuesta" == "n" || "$respuesta" == "N" ]]; then
-        echo "No se utilizará versionamiento con Git."
+        echo "No se utilizará versionamiento con Git o es posible que ya tenga una ventana abierta"
     else
         echo -e "${RED_BOLD}\nRespuesta no válida. Inténtalo de nuevo.${NC}"
         preguntar_versionamiento_git
