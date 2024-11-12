@@ -88,7 +88,7 @@ verificar_ruta_particion(){
     fi
 }
 
-# Función para mostrar puntos de carga con el mismo color que el texto
+# Función para mostrar puntos con el mismo color que el texto
 mostrar_puntos() {
     local color="$1"
     for i in {1..3}; do
@@ -175,7 +175,32 @@ montar_con_mounty() {
     fi
 }
 
-# Pregunta al usuario si quiere generar un archivo de documentación
+# Función para preguntar al usuario si quiere trabajar con Git
+preguntar_versionamiento_git() {
+    echo -e "\n ¿Quieres trabajar con versionamiento de código en GitHub? (Si)[S/s] o (No)[N/n]"
+    
+    # Lee un solo carácter sin esperar Enter
+    read -r -n 1 respuesta
+    tput cuu1      # Mueve el cursor una línea hacia arriba
+    tput el        # Borra el contenido de la línea
+    
+    # Imprime una nueva línea después de capturar el carácter
+    echo
+    
+    if [[ "$respuesta" == "s" || "$respuesta" == "S" ]]; then
+         echo "Iniciando versionamiento con Git..."
+        # Abre una nueva terminal
+        bash ./git_flow.sh
+        # Lugo selecciono la terminal donde estoy ejecutando este script para seguir con el flujo aqui
+    elif [[ "$respuesta" == "n" || "$respuesta" == "N" ]]; then
+        echo "No se utilizará versionamiento con Git."
+    else
+        echo -e "${RED_BOLD}\nRespuesta no válida. Inténtalo de nuevo.${NC}"
+        preguntar_versionamiento_git
+    fi
+}
+
+# Función para generar la documentación
 generar_doc(){
     echo -e "\n ¿Quieres generar un archivo de documentación? (Si)[S/s] o (No)[N/n]"
     
@@ -183,15 +208,19 @@ generar_doc(){
     read -r -n 1 respuesta
     tput cuu1      # Mueve el cursor una línea hacia arriba
     tput el        # Borra el contenido de la línea
+    
     # Imprime una nueva línea después de capturar el carácter
     echo
-
+    
     if [[ "$respuesta" == "s" || "$respuesta" == "S" ]]; then
         # Lógica para generar el archivo de documentación
         echo "Generando archivo de documentación..."
         bash ./docs_manager.sh
-    else
+    elif [[ "$respuesta" == "n" || "$respuesta" == "N" ]]; then
         echo "No se generará el archivo de documentación."
+    else
+        echo -e "${RED_BOLD}\nRespuesta no válida. Inténtalo de nuevo.${NC}"
+        generar_doc
     fi
 }
 
@@ -204,6 +233,7 @@ detectar_sistema_operativo() {
         DEVICE=$(flutter devices --machine | jq -r '.[0].name')
         echo -e "\n${GREEN_BOLD}Dispositivo al que compilara:${NC}"
         echo "  - $DEVICE"
+        preguntar_versionamiento_git
         generar_doc
         # Llama al nuevo script para ejecutar los proyectos, pasando el sistema operativo
         bash ./flutter_manager.sh "linux"
@@ -214,6 +244,7 @@ detectar_sistema_operativo() {
         DEVICE=$(flutter devices --machine | jq -r '.[0].name')
         echo -e "\n${GREEN_BOLD}Dispositivo al que compilara:${NC}"
         echo "  - $DEVICE"
+        preguntar_versionamiento_git
         generar_doc
         install_ntfs3g_macfuse_mounty
         montar_con_ntfs_3g  # Montar usando Mounty
@@ -225,6 +256,7 @@ detectar_sistema_operativo() {
         DEVICE=$(flutter devices --machine | jq -r '.[0].name')
         echo -e "\n${GREEN_BOLD}Dispositivo al que compilara:${NC}"
         echo "  - $DEVICE"
+        preguntar_versionamiento_git
         generar_doc
         bash ./flutter_manager.sh "windows"
     else

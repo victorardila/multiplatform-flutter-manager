@@ -50,21 +50,9 @@ else
     exit 1
 fi
 
-# Función para eliminar enlaces simbólicos existentes
-clean_symlink() {
-    local symlink_path="$FLUTTER_PLUGIN_DIR/path_provider_linux"
-    if [ -L "$symlink_path" ]; then
-        rm "$symlink_path" || {
-            echo -e "${RED_BOLD}Error al eliminar el enlace simbólico.${NC}"
-            exit 1
-        }
-    fi
-}
-
 run_projects() {
     # Función para ejecutar el proyecto
     cd "$PROJECT_DIR/$PROJECT_NAME" || exit
-    clean_symlink
 
     # Limpiar, obtener dependencias
     flutter clean > /dev/null 2>&1
